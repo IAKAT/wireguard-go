@@ -33,7 +33,7 @@ const (
 )
 
 func printUsage() {
-	fmt.Printf("Usage: %s [-f/--foreground] INTERFACE-NAME\n", os.Args[0])
+	fmt.Printf("Usage: %s [-f/--foreground] [--disable-daita] INTERFACE-NAME\n", os.Args[0])
 }
 
 func warning() {
@@ -66,29 +66,29 @@ func main() {
 	warning()
 
 	var foreground bool
+	var enableDaita = true // DAITA enabled by default
 	var interfaceName string
-	if len(os.Args) < 2 || len(os.Args) > 3 {
+	args := os.Args[1:]
+	if len(args) == 0 {
 		printUsage()
 		return
 	}
-
-	switch os.Args[1] {
-
-	case "-f", "--foreground":
-		foreground = true
-		if len(os.Args) != 3 {
-			printUsage()
-			return
+	for len(args) > 0 {
+		switch args[0] {
+		case "-f", "--foreground":
+			foreground = true
+			args = args[1:]
+		case "--disable-daita":
+			enableDaita = false
+			args = args[1:]
+		default:
+			interfaceName = args[0]
+			args = args[1:]
 		}
-		interfaceName = os.Args[2]
-
-	default:
-		foreground = false
-		if len(os.Args) != 2 {
-			printUsage()
-			return
-		}
-		interfaceName = os.Args[1]
+	}
+	if interfaceName == "" {
+		printUsage()
+		return
 	}
 
 	if !foreground {
@@ -223,6 +223,7 @@ func main() {
 	}
 
 	device := device.NewDevice(tun, conn.NewDefaultBind(), logger)
+	device.EnableDaita = enableDaita
 
 	logger.Verbosef("Device started")
 

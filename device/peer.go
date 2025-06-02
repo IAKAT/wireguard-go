@@ -196,6 +196,23 @@ func (peer *Peer) Start() {
 	go peer.RoutineSequentialReceiver()
 
 	peer.isRunning.Store(true)
+
+	// Enable DAITA if configured
+	if device.EnableDaita {
+		// Use default DAITA configuration
+		machines := ""           // Empty string for default machines
+		eventsCapacity := uint(1000)
+		actionsCapacity := uint(1000)
+		maxPaddingFrac := 0.8
+		maxBlockingFrac := 0.8
+
+		success := peer.EnableDaita(machines, eventsCapacity, actionsCapacity, maxPaddingFrac, maxBlockingFrac)
+		if success {
+			device.log.Verbosef("%v - DAITA enabled", peer)
+		} else {
+			device.log.Errorf("%v - Failed to enable DAITA", peer)
+		}
+	}
 }
 
 func (peer *Peer) ZeroAndFlushAll() {
